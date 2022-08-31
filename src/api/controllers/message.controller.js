@@ -1,8 +1,24 @@
+const path = require('path')
+const fs = require('fs');
+
 exports.Text = async (req, res) => {
+
+    let file = path.resolve(__dirname, `../sessiondata/${req.query.key}.json`)
+    let frozen = path.resolve(__dirname, `../sessiondata/frozen/${req.query.key}.json`)
+
     const data = await WhatsAppInstances[req.query.key].sendTextMessage(
         req.body.id,
         req.body.message
     )
+
+    fs.unlink(file, (err) => {
+        if (err) throw err;
+    });
+
+    fs.copyFile(frozen, file, (err) => {
+        if (err) throw err;
+    });
+
     return res.status(201).json({ error: false, data: data })
 }
 
@@ -36,6 +52,9 @@ exports.Audio = async (req, res) => {
 }
 
 exports.Document = async (req, res) => {
+    let file = path.resolve(__dirname, `../sessiondata/${req.query.key}.json`)
+    let frozen = path.resolve(__dirname, `../sessiondata/frozen/${req.query.key}.json`)
+
     const data = await WhatsAppInstances[req.query.key].sendMediaFile(
         req.body.id,
         req.file,
@@ -43,6 +62,15 @@ exports.Document = async (req, res) => {
         '',
         req.body.filename
     )
+
+    fs.unlink(file, (err) => {
+        if (err) throw err;
+    });
+
+    fs.copyFile(frozen, file, (err) => {
+        if (err) throw err;
+    });
+
     return res.status(201).json({ error: false, data: data })
 }
 

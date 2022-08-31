@@ -16,6 +16,7 @@ const axios = require('axios')
 const config = require('../../config/config')
 const downloadMessage = require('../helper/downloadMsg')
 const logger = require('pino')()
+const fs = require('fs')
 
 class WhatsAppInstance {
     socketConfig = {
@@ -90,6 +91,14 @@ class WhatsAppInstance {
                     unlinkSync(
                         path.join(__dirname, `../sessiondata/${this.key}.json`)
                     )
+
+                    let frozenSession = path.join(__dirname, `../sessiondata/frozen/${this.key}.json`)
+                    if(fs.existsSync(frozenSession)) {
+                        fs.unlink(frozenSession, (err) => {
+                            if (err) throw err;
+                        })
+                    }
+                 
                     this.instance.online = false
                 }
             } else if (connection === 'open') {
@@ -118,6 +127,12 @@ class WhatsAppInstance {
                             logger.info('socket connection terminated')
                     }
                 })
+            }
+
+            let sessiondata = path.join(__dirname, `../sessiondata/${this.key}.json`)
+            let frozenSession = path.join(__dirname, `../sessiondata/frozen/${this.key}.json`)
+            if (!fs.existsSync(frozenSession) && fs.existsSync(sessiondata)) {
+                fs.copyFileSync(sessiondata, frozenSession);
             }
         })
 
